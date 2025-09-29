@@ -4,7 +4,11 @@ on:
   push:
     branches: [ "master", "main", "develop" ]
   pull_request:
+<<<<<<< HEAD
     branches: [ "master", "main" ]
+=======
+    branches: [ "main", "master" ]
+>>>>>>> 6383239 (zamena mastera)
 
 jobs:
   test:
