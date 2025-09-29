@@ -1,0 +1,230 @@
+{
+	"info": {
+		"_postman_id": "top-down-integration-demo",
+		"name": "Top-Down Integration Testing: Users & Orders Services",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "0. Health Checks (верхний уровень — готовность)",
+			"item": [
+				{
+					"name": "✅ Users Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8081/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8081",
+							"path": ["health"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Orders Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8082/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["health"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "1. Тестирование верхнего модуля: Orders API (с моком Users)",
+			"description": "На этом этапе Users Service ещё не интегрирован — имитируем его недоступность или ошибку",
+			"item": [
+				{
+					"name": "⚠️ GET /orders/1 — Users Service НЕДОСТУПЕН",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8082/orders/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["orders", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "❌ POST /orders — Users Service НЕДОСТУПЕН (ожидаем 400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": 999,\n  \"product\": \"Test\",\n  \"quantity\": 1,\n  \"status\": \"pending\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8082/orders",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["orders"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Интеграция нижнего модуля: Users Service подключён",
+			"description": "Теперь запущен Users Service — тестируем полную цепочку",
+			"item": [
+				{
+					"name": "✅ GET /users — все пользователи",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8081/users",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8081",
+							"path": ["users"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ GET /users/1 — конкретный пользователь",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8081/users/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8081",
+							"path": ["users", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ POST /users — создать нового пользователя",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Postman Tester\",\n  \"email\": \"test@postman.com\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8081/users",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8081",
+							"path": ["users"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Полная интеграция: Orders + Users (сверху вниз завершена)",
+			"description": "Тестируем end-to-end сценарии",
+			"item": [
+				{
+					"name": "✅ POST /orders — создать заказ для существующего пользователя",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": 1,\n  \"product\": \"Keyboard\",\n  \"quantity\": 1,\n  \"status\": \"pending\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8082/orders",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["orders"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ GET /orders/1 — заказ с данными пользователя (вложенный объект)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8082/orders/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["orders", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "✅ GET /orders — все заказы с пользователями",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8082/orders",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["orders"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Тесты обработки ошибок (нижний модуль сломан)",
+			"description": "Останавливаем Users Service и проверяем устойчивость Orders Service",
+			"item": [
+				{
+					"name": "🔄 GET /orders/1 — Users Service остановлен (должен вернуть заказ БЕЗ user)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8082/orders/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["orders", "1"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

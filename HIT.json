@@ -1,0 +1,258 @@
+{
+	"info": {
+		"_postman_id": "hybrid-integration-demo",
+		"name": "Hybrid Integration Testing",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🟢 Позитивные сценарии (end-to-end, все уровни)",
+			"description": "Критичные бизнес-сценарии: полная интеграция UI → API → Business Logic → Data",
+			"item": [
+				{
+					"name": "✅ Health Check — оба сервиса работают",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8081/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8081",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "✅ Health Check — Orders",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8082/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "✅ Создать заказ для существующего пользователя (ID=1)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": 1,\n  \"product\": \"Laptop\",\n  \"quantity\": 1,\n  \"status\": \"confirmed\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8082/orders",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["orders"]
+						}
+					}
+				},
+				{
+					"name": "✅ Получить заказ с данными пользователя (все уровни интегрированы)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8082/orders/3",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["orders", "3"]
+						}
+					}
+				},
+				{
+					"name": "✅ Получить всех пользователей (проверка нижнего уровня)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8081/users",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8081",
+							"path": ["users"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🔴 Негативные сценарии (валидация бизнес-логики)",
+			"description": "Тестируем обработку ошибок на всех уровнях: валидация, недоступность, некорректные данные",
+			"item": [
+				{
+					"name": "❌ Создать заказ для несуществующего пользователя (user_id=999)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": 999,\n  \"product\": \"Phone\",\n  \"quantity\": 1,\n  \"status\": \"pending\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8082/orders",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["orders"]
+						}
+					}
+				},
+				{
+					"name": "❌ Некорректный JSON при создании заказа",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ invalid json }"
+						},
+						"url": {
+							"raw": "http://localhost:8082/orders",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["orders"]
+						}
+					}
+				},
+				{
+					"name": "❌ GET /orders/999 — несуществующий заказ",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8082/orders/999",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["orders", "999"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🟡 Сценарии с частичной изоляцией (гибридность)",
+			"description": "Имитируем отказ нижнего уровня — тестируем устойчивость верхнего",
+			"item": [
+				{
+					"name": "🔄 GET /orders/1 — Users Service остановлен (graceful degradation)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8082/orders/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["orders", "1"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+								 "// Этот тест имитирует ситуацию, когда Users Service недоступен.",
+								 "// Ожидаем: заказ возвращается, но без поля 'user'"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "🟣 Критичный бизнес-сценарий: полный цикл",
+			"description": "Создание → Получение → Валидация — всё в одном потоке",
+			"item": [
+				{
+					"name": "1. Создать пользователя",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Hybrid Tester\",\n  \"email\": \"hybrid@test.com\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8081/users",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8081",
+							"path": ["users"]
+						}
+					}
+				},
+				{
+					"name": "2. Создать заказ для этого пользователя (используйте ID из ответа выше!)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": 3,\n  \"product\": \"Tablet\",\n  \"quantity\": 1,\n  \"status\": \"shipped\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8082/orders",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["orders"]
+						}
+					}
+				},
+				{
+					"name": "3. Получить заказ с полными данными пользователя",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8082/orders/4",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["orders", "4"]
+						}
+					}
+				}
+			]
+		}
+	]
+}

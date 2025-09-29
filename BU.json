@@ -1,0 +1,112 @@
+{
+	"info": {
+		"_postman_id": "bottom-up-integration-fixed",
+		"name": "Bottom-Up Integration Testing (FIXED)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Уровень 1: Базовый модуль — Users Service",
+			"item": [
+				{
+					"name": "✅ Health Check — Users Service",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8081/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8081",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "✅ GET /users — существующие пользователи (ID 1 и 2)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8081/users",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8081",
+							"path": ["users"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Уровень 2: Интеграция с существующими пользователями",
+			"item": [
+				{
+					"name": "✅ POST /orders — создать заказ для пользователя ID=1 (гарантированно существует)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": 1,\n  \"product\": \"Keyboard\",\n  \"quantity\": 1,\n  \"status\": \"pending\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8082/orders",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["orders"]
+						}
+					}
+				},
+				{
+					"name": "✅ GET /orders/3 — получить созданный заказ с данными пользователя",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8082/orders/3",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["orders", "3"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Уровень 3: Создание нового пользователя (опционально)",
+			"item": [
+				{
+					"name": "🆕 POST /users — создать нового пользователя",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Postman User\",\n  \"email\": \"postman@test.com\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8081/users",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8081",
+							"path": ["users"]
+						}
+					}
+				}
+			]
+		}
+	]
+}
